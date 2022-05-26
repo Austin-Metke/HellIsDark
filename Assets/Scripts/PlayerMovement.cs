@@ -4,19 +4,15 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 3;
     private Rigidbody2D rb;
     private const int maxJumps = 2;
     [SerializeField] private int jumps;
-    private const float jumpVelocity = 5;
-    private const float dashForce = 2000;
-    private float horizontalInput;
-    private bool hasDashed;
+    [SerializeField] private float jumpVelocity = 5;
+   [SerializeField] private float dashForce = 5;
+    public bool hasDashed;
     private bool isGrounded = true;
-    private float dashTime;
     private const float dashResetTime = 0.5f;
     private float startDashTime;
-
 
     private void Awake()
     {
@@ -27,40 +23,27 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         jumps = maxJumps;
+        rb.freezeRotation = true;
     }
 
     //Ran once per frame
     //TODO Implement dashing
     private void Update() 
-{
-
-    //Resets jump and dash if they're on the ground
-    if(isGrounded)
     {
-        jumps = maxJumps;
-            if (Time.time - startDashTime >= dashResetTime && hasDashed)
+
+      //Resets dash
+      if (isGrounded && Time.time - startDashTime >= dashResetTime && hasDashed)
             {
                 Debug.Log("DASH RESET");
                 hasDashed = false;
             }
+        
+      //Resets jumps
+      if(isGrounded && jumps != maxJumps)
+        {
+            jumps = maxJumps;
         }
- 
-        //Left right movement
-        horizontalInput = Input.GetAxis("Horizontal");
-        rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
 
-        //Changes players direction based on horizontal movement
-    if(horizontalInput >= 0.01f)
-    {
-        transform.localScale = Vector3.one;
-    } else if(horizontalInput <= -0.01f) 
-    {
-        transform.localScale = new Vector3(-1, 1, 1);
-    }
-
-
-
-     
         //For dashing
         if (Input.GetKeyDown(KeyCode.LeftShift) && jumps > 0 && jumps <= maxJumps && !hasDashed)
         {
@@ -101,28 +84,26 @@ private void OnCollisionEnter2D(Collision2D collision)
 
 private void Jump() 
     {
-        Debug.Log("Jump!");
-        if(jumps > 0)
-        {
-        rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
-        jumps--;
         isGrounded = false;
-        }
+        jumps--;
+        Debug.Log("Jump!");
+        rb.AddForce(new Vector2(0, jumpVelocity), ForceMode2D.Impulse);
+        
     }
 
 private void Dash() 
     {
-            Debug.Log("Dash!");
+        hasDashed = true;
+        jumps--;
+        Debug.Log("Dash!");
             if(isLookingLeft())
             {
-            rb.AddForce(Vector2.left * dashForce, ForceMode2D.Force);
+            rb.AddForce(Vector2.left * dashForce, ForceMode2D.Impulse);
             }
             if(isLookingRight())
             {
-            rb.AddForce(Vector2.right * dashForce, ForceMode2D.Force);
-        }
-        hasDashed = true;
-        jumps--;
+            rb.AddForce(Vector2.right * dashForce, ForceMode2D.Impulse);
+            }
 
     }
 
